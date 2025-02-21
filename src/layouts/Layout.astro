@@ -1,0 +1,42 @@
+---
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<title>{title}</title>
+	</head>
+	<body>
+		<slot />
+	</body>
+</html>
+
+<style>
+	:root {
+		--background-color-dark: #000;
+		--background-color-light: #fff;
+		--text-color-dark: #fff;
+		--text-color-light: #000;
+	}
+
+	body {
+		background-color: var(--background-color-dark);
+		color: var(--text-color-dark);
+		font-family: monospace;
+		font-size: 1.2rem;
+		margin: 0 auto;
+		max-width: 80ch;
+		padding: 0 1rem;
+	}
+
+	@media (prefers-color-scheme: light) {
+		body {
+			background-color: var(--background-color-light);
+			color: var(--text-color-light);
+		}
+	}
+</style>

@@ -7,6 +7,9 @@ import playformCompress from '@playform/compress';
 export default defineConfig({
     site: 'https://davidgasquez.github.io',
     base: 'astroing',
+    prefetch: {
+        prefetchAll: true,
+    },
     integrations: [
         playformCompress({}),
     ],

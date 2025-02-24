@@ -17,7 +17,7 @@ const { title } = Astro.props;
 	</body>
 </html>
 
-<style>
+<style is:global>
 	:root {
 		--background-color: var(--background-color-light);
 		--text-color: var(--text-color-light);
@@ -43,12 +43,13 @@ const { title } = Astro.props;
 		padding: 0 1rem;
 	}
 
-	a:any-link {
+	a {
 		color: var(--text-color);
 		text-decoration: none;
+		border-bottom: 1px solid var(--text-color);
 	}
-
 	a:hover {
-		text-decoration: underline;
+		background-color: var(--text-color);
+		color: var(--background-color);
 	}
 </style>

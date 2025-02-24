@@ -6,7 +6,7 @@ import playformCompress from '@playform/compress';
 // https://astro.build/config
 export default defineConfig({
     site: 'https://davidgasquez.github.io',
-    base: 'astroing',
+    base: '/astroing',
     prefetch: {
         prefetchAll: true,
     },

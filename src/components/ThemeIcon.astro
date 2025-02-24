@@ -11,20 +11,41 @@
         position: fixed;
         top: 1rem;
         right: 1rem;
+        padding: 0.3rem;
         border: 0;
-        background: none;
+        background: transparent;
+        z-index: 100;
+        cursor: pointer;
     }
 
     .theme-text {
         font-family: monospace;
-        font-size: 0.8rem;
+        font-size: 0.7rem;
+        font-weight: bold;
         letter-spacing: 0.1em;
         text-transform: uppercase;
         color: #000;
+        opacity: 0.8;
+        transition: opacity 0.3s;
     }
 
     :root.dark .theme-text {
         color: #fff;
+    }
+
+    #themeToggle:hover .theme-text {
+        opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+        #themeToggle {
+            top: 0.7rem;
+            right: 0.7rem;
+        }
+
+        .theme-text {
+            font-size: 0.6rem;
+        }
     }
 </style>
 

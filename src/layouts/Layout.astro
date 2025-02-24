@@ -7,7 +7,7 @@ const { title } = Astro.props;
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/svg+xml" href="/astroing/favicon.svg" />
 		<title>{title}</title>
 	</head>
@@ -18,6 +18,13 @@ const { title } = Astro.props;
 </html>
 
 <style is:global>
+	/* CSS Reset */
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+
 	:root {
 		--background-color: var(--background-color-light);
 		--text-color: var(--text-color-light);
@@ -26,6 +33,12 @@ const { title } = Astro.props;
 		--background-color-dark: #000;
 		--text-color-light: #000;
 		--text-color-dark: #fff;
+
+		--spacing-sm: 0.5rem;
+		--spacing-md: 1rem;
+		--spacing-lg: 2rem;
+
+		--transition-speed: 0.3s;
 	}
 
 	:root.dark {
@@ -33,22 +46,45 @@ const { title } = Astro.props;
 		--text-color: var(--text-color-dark);
 	}
 
+	html,
+	body {
+		margin: 0;
+		padding: 0;
+	}
+
 	body {
 		background-color: var(--background-color);
 		color: var(--text-color);
 		font-family: monospace;
-		font-size: 1.2rem;
+		font-size: 1rem;
+		line-height: 1.5;
 		margin: 0 auto;
-		max-width: 60ch;
-		padding: 0 1rem;
+		max-width: 90%;
+		padding: var(--spacing-md);
+		transition:
+			background-color var(--transition-speed),
+			color var(--transition-speed);
+	}
+
+	@media (min-width: 768px) {
+		body {
+			font-size: 1.2rem;
+			max-width: 60ch;
+		}
 	}
 
 	a {
 		color: var(--text-color);
 		text-decoration: none;
 		border-bottom: 1px solid var(--text-color);
+		padding: var(--spacing-sm) 0;
+		display: inline-block;
+		transition: all var(--transition-speed);
 	}
-	a:hover {
+
+	a:hover,
+	a:focus,
+	a:active {
 		background-color: var(--text-color);
 		color: var(--background-color);
 	}

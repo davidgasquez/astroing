@@ -1,0 +1,27 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Page Not Found">
+    <div class="error-container">
+        <h1>404</h1>
+        <p>The page you're looking for doesn't exist.</p>
+        <a href="/astroing/">Return Home</a>
+    </div>
+</Layout>
+
+<style>
+    .error-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        min-height: 50vh;
+    }
+
+    h1 {
+        font-size: 5rem;
+        margin-bottom: var(--spacing-md);
+    }
+</style>

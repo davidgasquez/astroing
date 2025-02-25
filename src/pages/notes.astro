@@ -1,0 +1,134 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+
+// Define the type for our note data
+interface NoteData {
+    id: string;
+    name: string;
+    path: string;
+    url: string;
+    download_url: string;
+    size: number;
+    sha: string;
+}
+
+interface NoteEntry {
+    id: string;
+    collection: string;
+    data: NoteData;
+}
+
+// Fetch all notes from the content collection
+// Use type assertion to tell TypeScript that we know what we're doing
+const allNotes = (await getCollection("notes" as any)) as NoteEntry[];
+
+// Sort notes alphabetically by name
+const sortedNotes = allNotes.sort((a, b) =>
+    a.data.name.localeCompare(b.data.name),
+);
+---
+
+<Layout title="Notes - Astroing">
+    <main>
+        <h1>Notes</h1>
+        <p>
+            A collection of notes from the
+            <a
+                href="https://github.com/datonic/hub/tree/main/notes"
+                target="_blank">datonic repository</a
+            >.
+        </p>
+
+        <ul class="notes-list">
+            {
+                sortedNotes.map((note) => (
+                    <li class="note-item">
+                        <a
+                            href={`/astroing/notes/${note.data.id}`}
+                            class="note-link"
+                        >
+                            <h2>
+                                {note.data.id
+                                    .replace(/-/g, " ")
+                                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                            </h2>
+                            <div class="note-meta">
+                                <span class="note-size">
+                                    {Math.round((note.data.size / 1024) * 10) /
+                                        10}{" "}
+                                    KB
+                                </span>
+                            </div>
+                        </a>
+                    </li>
+                ))
+            }
+        </ul>
+        <div>
+            <a href="/astroing/">Return Home</a>
+        </div>
+    </main>
+</Layout>
+
+<style>
+    h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .notes-list {
+        list-style: none;
+        padding: 0;
+        margin: 2rem 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .note-item {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        transition:
+            transform 0.2s,
+            box-shadow 0.2s;
+    }
+
+    .note-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .note-link {
+        display: block;
+        padding: 1.5rem;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .note-link h2 {
+        margin-top: 0;
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .note-meta {
+        font-size: 0.875rem;
+        color: #666;
+    }
+
+    /* Dark mode styles */
+    :global(.dark) .note-item {
+        border-color: #444;
+        background-color: #222;
+    }
+
+    :global(.dark) .note-link {
+        color: #fff;
+    }
+
+    :global(.dark) .note-meta {
+        color: #aaa;
+    }
+</style>

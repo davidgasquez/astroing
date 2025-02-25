@@ -1,0 +1,252 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+
+// Define the type for our note data
+interface NoteData {
+    id: string;
+    name: string;
+    path: string;
+    url: string;
+    download_url: string;
+    size: number;
+    sha: string;
+}
+
+interface NoteEntry {
+    id: string;
+    collection: string;
+    data: NoteData;
+}
+
+// This function is required for dynamic routes in Astro
+// It generates all possible paths at build time
+export async function getStaticPaths() {
+    // Fetch all notes
+    const allNotes = (await getCollection("notes" as any)) as NoteEntry[];
+
+    // Return an array of objects with params (slug) and props (note data)
+    return allNotes.map((note) => ({
+        params: { slug: note.data.id },
+        props: { note },
+    }));
+}
+
+// Get the note from props
+const { note } = Astro.props;
+
+// Fetch the note content
+const response = await fetch(note.data.download_url);
+const content = await response.text();
+
+// Convert markdown to HTML
+// We'll use a simple regex-based approach for basic markdown conversion
+function markdownToHtml(markdown: string) {
+    // Replace headers
+    let html = markdown
+        .replace(/^# (.*$)/gm, "<h1>$1</h1>")
+        .replace(/^## (.*$)/gm, "<h2>$1</h2>")
+        .replace(/^### (.*$)/gm, "<h3>$1</h3>")
+        .replace(/^#### (.*$)/gm, "<h4>$1</h4>")
+        .replace(/^##### (.*$)/gm, "<h5>$1</h5>")
+        .replace(/^###### (.*$)/gm, "<h6>$1</h6>");
+
+    // Replace bold and italic
+    html = html
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*(.*?)\*/g, "<em>$1</em>")
+        .replace(/__(.*?)__/g, "<strong>$1</strong>")
+        .replace(/_(.*?)_/g, "<em>$1</em>");
+
+    // Replace links
+    html = html.replace(
+        /\[(.*?)\]\((.*?)\)/g,
+        '<a href="$2" target="_blank">$1</a>',
+    );
+
+    // Replace lists
+    html = html
+        .replace(/^\s*\*\s(.*$)/gm, "<li>$1</li>")
+        .replace(/^\s*-\s(.*$)/gm, "<li>$1</li>")
+        .replace(/^\s*\d+\.\s(.*$)/gm, "<li>$1</li>");
+
+    // Wrap lists in ul/ol tags (simplified approach)
+    html = html.replace(/<li>(.*?)<\/li>/g, "<ul><li>$1</li></ul>");
+    html = html.replace(/<\/ul>\s*<ul>/g, "");
+
+    // Replace code blocks
+    html = html.replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
+
+    // Replace inline code
+    html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+    // Replace paragraphs (any line that's not a header, list, etc.)
+    html = html.replace(/^([^<].*)/gm, "<p>$1</p>");
+
+    // Clean up empty paragraphs
+    html = html.replace(/<p><\/p>/g, "");
+
+    return html;
+}
+
+const htmlContent = markdownToHtml(content);
+
+// Format the title
+const title = note.data.id
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
+---
+
+<Layout title={`${title} - Astroing Notes`}>
+    <main>
+        <div class="note-header">
+            <a href="/astroing/notes" class="back-link">← Back to Notes</a>
+            <div class="note-meta">
+                <span class="note-title">Viewing {title}.md</span>
+                <span class="note-size"
+                    >{Math.round((note.data.size / 1024) * 10) / 10} KB</span
+                >
+                <a href={note.data.url} target="_blank" class="github-link"
+                    >View on GitHub</a
+                >
+            </div>
+        </div>
+
+        <div class="note-content">
+            <article set:html={htmlContent} />
+        </div>
+        <div>
+            <a href="/astroing/">Return Home</a>
+        </div>
+    </main>
+</Layout>
+
+<style>
+    .note-header {
+        margin-bottom: 2rem;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-bottom: 1rem;
+        color: #666;
+        text-decoration: none;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+
+    h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .note-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: #666;
+    }
+
+    .github-link {
+        color: #d68903;
+        text-decoration: none;
+    }
+
+    .github-link:hover {
+        text-decoration: underline;
+    }
+
+    .note-content {
+        line-height: 1.6;
+    }
+
+    .note-content h1 {
+        font-size: 2rem;
+        margin: 1.5rem 0 1rem;
+    }
+
+    .note-content h2 {
+        font-size: 1.75rem;
+        margin: 1.5rem 0 1rem;
+    }
+
+    .note-content h3 {
+        font-size: 1.5rem;
+        margin: 1.5rem 0 1rem;
+    }
+
+    .note-content h4 {
+        font-size: 1.25rem;
+        margin: 1.5rem 0 1rem;
+    }
+
+    .note-content p {
+        margin-bottom: 1rem;
+    }
+
+    .note-content ul,
+    .note-content ol {
+        margin-bottom: 1rem;
+        padding-left: 2rem;
+    }
+
+    .note-content li {
+        margin-bottom: 0.5rem;
+    }
+
+    .note-content pre {
+        background-color: #f6f8fa;
+        border-radius: 6px;
+        padding: 1rem;
+        overflow-x: auto;
+        margin-bottom: 1rem;
+    }
+
+    .note-content code {
+        font-family: monospace;
+        background-color: #f6f8fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 3px;
+    }
+
+    .note-content pre code {
+        padding: 0;
+        background-color: transparent;
+    }
+
+    .note-content a {
+        color: #0366d6;
+        text-decoration: none;
+    }
+
+    .note-content a:hover {
+        text-decoration: underline;
+    }
+
+    /* Dark mode styles */
+    :global(.dark) .back-link {
+        color: #aaa;
+    }
+
+    :global(.dark) .note-meta {
+        color: #aaa;
+    }
+
+    :global(.dark) .github-link {
+        color: #58a6ff;
+    }
+
+    :global(.dark) .note-content pre {
+        background-color: #161b22;
+    }
+
+    :global(.dark) .note-content code {
+        background-color: #161b22;
+    }
+
+    :global(.dark) .note-content a {
+        color: #58a6ff;
+    }
+</style>

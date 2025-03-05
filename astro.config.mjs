@@ -11,6 +11,9 @@ export default defineConfig({
         prefetchAll: true,
     },
     trailingSlash: "never",
+    build: {
+        format: 'file',
+    },
     integrations: [
         playformCompress({}),
     ],

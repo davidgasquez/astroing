@@ -1,21 +1,5 @@
 import { defineCollection, z } from 'astro:content';
 
-const countries = defineCollection({
-    loader: async () => {
-        const response = await fetch("https://restcountries.com/v3.1/all");
-        const data = await response.json();
-
-        return data.map((country: any) => ({
-            id: country.cca3,
-            ...country,
-        }));
-    },
-    schema: z.object({
-        id: z.string(),
-        cca3: z.string()
-    })
-});
-
 const notes = defineCollection({
     loader: async () => {
         const response = await fetch("https://api.github.com/repos/datonic/hub/contents/notes");
@@ -46,4 +30,4 @@ const notes = defineCollection({
     })
 });
 
-export const collections = { countries, notes };
+export const collections = { notes };

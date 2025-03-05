@@ -10,6 +10,7 @@ export default defineConfig({
     prefetch: {
         prefetchAll: true,
     },
+    trailingSlash: "never",
     integrations: [
         playformCompress({}),
     ],

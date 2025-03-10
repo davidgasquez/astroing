@@ -1,0 +1,72 @@
+---
+import Layout from "../layouts/Layout.astro";
+import SimpleChart from "../components/SimpleChart.jsx";
+---
+
+<Layout title="Chart Example | Astroing">
+    <main>
+        <h1>Chart Example</h1>
+        <p>
+            This page demonstrates a simple chart created with Recharts, styled
+            to match the monochromatic theme of the site.
+        </p>
+
+        <div class="chart-container">
+            <SimpleChart client:load />
+        </div>
+
+        <div class="navigation">
+            <a href="/astroing">Back to Home</a>
+        </div>
+    </main>
+</Layout>
+
+<style>
+    main {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .chart-container {
+        margin: 2rem 0;
+        padding: 1.5rem;
+        border: none;
+        border-radius: 0;
+        background-color: transparent;
+        height: 450px; /* Ensure enough space for the chart */
+        transition: all 0.3s ease;
+    }
+
+    .navigation {
+        margin-top: 2rem;
+    }
+
+    .navigation a {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background-color: #333;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+    }
+
+    .navigation a:hover {
+        background-color: #555;
+    }
+
+    /* Dark mode styles */
+    :global(.dark) .navigation a {
+        background-color: #555;
+    }
+
+    :global(.dark) .navigation a:hover {
+        background-color: #777;
+    }
+</style>

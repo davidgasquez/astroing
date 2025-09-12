@@ -12,37 +12,31 @@ const { title } = Astro.props;
 		<meta name="description" content="Learning Astro" />
 		<link rel="icon" type="image/svg+xml" href="/astroing/favicon.svg" />
 		<!-- Prevent flash of unstyled content by setting theme immediately -->
-		<script is:inline define:vars={{ defaultTheme: "light" }}>
-			const theme =
-				localStorage.getItem("theme") ||
-				(window.matchMedia("(prefers-color-scheme: dark)").matches
-					? "dark"
-					: defaultTheme);
-			document.documentElement.classList.toggle("dark", theme === "dark");
-		</script>
+    <script is:inline define:vars={{ defaultTheme: "light" }}>
+        // Apply theme ASAP to avoid FOUC and announce it
+        const theme =
+            localStorage.getItem("theme") ||
+            (window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : defaultTheme);
+        document.documentElement.classList.toggle("dark", theme === "dark");
+        try { document.dispatchEvent(new CustomEvent("themechange", { detail: { theme } })); } catch {}
+    </script>
 		<title>{title}</title>
 		<ClientRouter />
-		<script>
-			// Initialize theme on first page load
-			function initTheme() {
-				const theme =
-					localStorage.getItem("theme") ||
-					(window.matchMedia("(prefers-color-scheme: dark)").matches
-						? "dark"
-						: "light");
-
-				document.documentElement.classList.toggle(
-					"dark",
-					theme === "dark",
-				);
-			}
-
-			// Run on initial page load
-			initTheme();
-
-			// Also run after view transitions
-			document.addEventListener("astro:after-swap", initTheme);
-		</script>
+        <script>
+            // Re-apply theme after view transitions and notify listeners
+            const applyTheme = () => {
+                const theme =
+                    localStorage.getItem("theme") ||
+                    (window.matchMedia("(prefers-color-scheme: dark)").matches
+                        ? "dark"
+                        : "light");
+                document.documentElement.classList.toggle("dark", theme === "dark");
+                try { document.dispatchEvent(new CustomEvent("themechange", { detail: { theme } })); } catch {}
+            };
+            document.addEventListener("astro:after-swap", applyTheme);
+        </script>
 	</head>
 	<body>
 		<ThemeIcon />
@@ -99,6 +93,10 @@ const { title } = Astro.props;
 			background-color var(--transition-speed),
 			color var(--transition-speed);
 	}
+
+    /* Hint UA components to render in the right theme */
+    :root { color-scheme: light dark; }
+    :root.dark { color-scheme: dark; }
 
 	@media (min-width: 768px) {
 		body {

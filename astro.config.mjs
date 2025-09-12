@@ -2,7 +2,6 @@
 import { defineConfig } from 'astro/config';
 
 import playformCompress from '@playform/compress';
-import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
@@ -15,8 +14,13 @@ export default defineConfig({
     build: {
         format: 'file',
     },
+    // Avoid Vite pre-bundling Chart.js in dev; prevents stale optimized-dep 504s
+    vite: {
+        optimizeDeps: {
+            exclude: ["chart.js", "chart.js/auto"],
+        },
+    },
     integrations: [
         playformCompress({}),
-        react(),
     ],
 });

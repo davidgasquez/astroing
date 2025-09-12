@@ -1,0 +1,213 @@
+<div class="chart-container">
+    <canvas id="myChart" aria-label="Sales chart" role="img"></canvas>
+    
+    <style>
+        .chart-container {
+            height: 350px;
+            position: relative;
+        }
+    </style>
+</div>
+
+<script>
+    import Chart from "chart.js/auto";
+
+    // --- Theme utilities --------------------------------------------------
+    function toRGBA(color, alpha = 1) {
+        const hex = color.trim();
+        const hexRe = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+        const rgbRe = /^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i;
+        if (hexRe.test(hex)) {
+            const n = hex.slice(1);
+            const full = n.length === 3 ? n.split("").map((c) => c + c).join("") : n;
+            const int = parseInt(full, 16);
+            const r = (int >> 16) & 255;
+            const g = (int >> 8) & 255;
+            const b = int & 255;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+        const m = hex.match(rgbRe);
+        if (m) return `rgba(${m[1]}, ${m[2]}, ${m[3]}, ${alpha})`;
+        return color; // Fallback
+    }
+
+    function getThemeColors() {
+        const root = document.documentElement;
+        const styles = getComputedStyle(root);
+        const text = (styles.getPropertyValue("--text-color").trim() || "#000");
+        const bg = (styles.getPropertyValue("--background-color").trim() || "#fff");
+        const grid = toRGBA(text, 0.15);
+        const axis = toRGBA(text, 0.7);
+        const border = toRGBA(text, 0.25);
+        const fontFamily = getComputedStyle(document.body).fontFamily || "monospace";
+        return { text, bg, grid, axis, border, fontFamily };
+    }
+
+    // Draw a vertical crosshair aligned with the active element
+    function makePlugins() {
+        return [{
+            id: "crosshair",
+            afterDraw(chart) {
+                const theme = getThemeColors();
+                const active = chart.getActiveElements();
+                if (!active?.length) return;
+                const { ctx, chartArea: { top, bottom } } = chart;
+                const { datasetIndex, index } = active[0];
+                const elem = chart.getDatasetMeta(datasetIndex)?.data?.[index];
+                if (!elem) return;
+                ctx.save();
+                ctx.strokeStyle = theme.axis;
+                ctx.lineWidth = 1;
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.moveTo(elem.x, top);
+                ctx.lineTo(elem.x, bottom);
+                ctx.stroke();
+                ctx.restore();
+            },
+        }];
+    }
+
+    function buildConfig(theme) {
+        return {
+            type: "line",
+            data: {
+                labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+                datasets: [
+                    {
+                        label: "Sales",
+                        data: [12, 19, 3, 5, 2, 3],
+                        borderColor: theme.text,
+                        backgroundColor: theme.text,
+                        pointBackgroundColor: theme.bg,
+                        pointBorderColor: theme.text,
+                        pointHoverBackgroundColor: theme.bg,
+                        pointHoverBorderColor: theme.text,
+                        pointRadius: 3,
+                        pointHoverRadius: 6,
+                        hitRadius: 12,
+                        tension: 0.25,
+                        fill: false,
+                        borderWidth: 2,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    // Hover nearest point to the cursor, not only if intersecting
+                    mode: "nearest",
+                    intersect: false,
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: theme.text,
+                        borderColor: theme.border,
+                        borderWidth: 1,
+                        titleColor: theme.bg,
+                        bodyColor: theme.bg,
+                        displayColors: false,
+                        callbacks: {
+                            label(ctx) {
+                                const label = ctx.dataset?.label ?? "";
+                                const v = ctx.formattedValue;
+                                return `${label}: ${v}`;
+                            },
+                        },
+                    },
+                },
+                scales: {
+                    x: {
+                        grid: { color: theme.grid },
+                        ticks: { color: theme.text, font: { family: theme.fontFamily } },
+                        border: { color: theme.axis },
+                    },
+                    y: {
+                        grid: { color: theme.grid },
+                        ticks: { color: theme.text, font: { family: theme.fontFamily } },
+                        border: { color: theme.axis },
+                    },
+                },
+                elements: {
+                    point: { hoverRadius: 6, hitRadius: 12 },
+                },
+            },
+            plugins: makePlugins(),
+        };
+    }
+
+    let chartInstance = undefined;
+    let onThemeChange = undefined;
+
+    function cleanup() {
+        if (onThemeChange) {
+            try { document.removeEventListener("themechange", onThemeChange); } catch {}
+            onThemeChange = undefined;
+        }
+        try { chartInstance?.destroy(); } catch {}
+        chartInstance = undefined;
+    }
+
+    function init() {
+        const el = document.getElementById("myChart");
+        if (!(el instanceof HTMLCanvasElement)) return;
+
+        // If a chart already exists on this canvas, destroy it first
+        const existing = Chart.getChart?.(el);
+        if (existing) existing.destroy();
+
+        const ctx = el.getContext("2d");
+        if (!ctx) return;
+
+        // Apply global defaults to match site font/color
+        const theme = getThemeColors();
+        Chart.defaults.color = theme.text;
+        Chart.defaults.font.family = theme.fontFamily;
+
+        chartInstance = new Chart(ctx, buildConfig(theme));
+
+        // Listen for explicit theme changes from the app
+        onThemeChange = () => applyTheme();
+        document.addEventListener("themechange", onThemeChange);
+    }
+
+    function applyTheme() {
+        if (!chartInstance) return;
+        const t = getThemeColors();
+        // Update global defaults
+        Chart.defaults.color = t.text;
+        Chart.defaults.font.family = t.fontFamily;
+        // Update per-chart properties
+        const ds = chartInstance.data.datasets[0];
+        ds.borderColor = t.text;
+        ds.backgroundColor = t.text;
+        ds.pointBackgroundColor = t.bg;
+        ds.pointBorderColor = t.text;
+        const { options } = chartInstance;
+        options.plugins.tooltip.backgroundColor = t.text;
+        options.plugins.tooltip.borderColor = t.border;
+        options.plugins.tooltip.titleColor = t.bg;
+        options.plugins.tooltip.bodyColor = t.bg;
+        options.scales.x.grid.color = t.grid;
+        options.scales.y.grid.color = t.grid;
+        options.scales.x.ticks.color = t.text;
+        options.scales.y.ticks.color = t.text;
+        options.scales.x.border.color = t.axis;
+        options.scales.y.border.color = t.axis;
+        chartInstance.update();
+    }
+
+    // Initialize when DOM is ready (robust against script hoisting)
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init, { once: true });
+    } else {
+        queueMicrotask(init);
+    }
+
+    // Handle Astro client router page swaps
+    document.addEventListener("astro:before-swap", cleanup);
+    document.addEventListener("astro:page-load", init, { once: true });
+</script>
